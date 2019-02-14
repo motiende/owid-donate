@@ -17,7 +17,9 @@ interface DonationRequest {
     name: string,
     showOnList: boolean,
     amount: number,
-    interval: Interval
+    interval: Interval,
+    successUrl: string,
+    cancelUrl: string
 }
 
 stripe.setApiVersion('2019-02-11; checkout_sessions_beta=v4')
@@ -25,8 +27,9 @@ stripe.setApiVersion('2019-02-11; checkout_sessions_beta=v4')
 async function createSession(donation: DonationRequest) {
     if (donation.amount == null) throw { status: 400, message: "Please specify an amount" }
     if (donation.interval !== "monthly" && donation.interval !== "once") throw { status: 400, message: "Please specify an interval" }
+    if (donation.successUrl == null || donation.cancelUrl == null) throw { status: 400, message: "Please specify a successUrl and cancelUrl" }
 
-    const { name, showOnList, interval } = donation;
+    const { name, showOnList, interval, successUrl, cancelUrl } = donation;
     const amount = Math.floor(donation.amount)
 
     if (amount < 50 || amount > 10000000) {
@@ -36,8 +39,8 @@ async function createSession(donation: DonationRequest) {
     const metadata = { name, showOnList }
 
     const options: any = {
-        success_url: SUCCESS_URL,
-        cancel_url: CANCEL_URL,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
         payment_method_types: ["card"]
     }
 
