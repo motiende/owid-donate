@@ -15,7 +15,7 @@ type Interval = "once" | "monthly"
 
 interface DonationRequest {
     name: string,
-    hide: boolean,
+    showOnList: boolean,
     amount: number,
     interval: Interval
 }
@@ -26,14 +26,14 @@ async function createSession(donation: DonationRequest) {
     if (donation.amount == null) throw { status: 400, message: "Please specify an amount" }
     if (donation.interval !== "monthly" && donation.interval !== "once") throw { status: 400, message: "Please specify an interval" }
 
-    const { name, hide, interval } = donation;
+    const { name, showOnList, interval } = donation;
     const amount = Math.floor(donation.amount)
 
     if (amount < 50 || amount > 10000000) {
         throw { status: 400, message: "You can only donate between $0.50 and $100,000 USD" }
     }
 
-    const metadata = { name, hide }
+    const metadata = { name, showOnList }
 
     const options: any = {
         success_url: SUCCESS_URL,
