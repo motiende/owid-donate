@@ -53,7 +53,7 @@ async function createSession(donation: DonationRequest) {
         options.line_items = [{
             amount: amount,
             currency: CURRENCY,
-            name: "One-off donation",
+            name: "One-time donation",
             quantity: 1
         }]
         options.payment_intent_data = {
