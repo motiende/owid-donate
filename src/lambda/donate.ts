@@ -22,7 +22,7 @@ interface DonationRequest {
     cancelUrl: string
 }
 
-stripe.setApiVersion('2019-02-11; checkout_sessions_beta=v4')
+stripe.setApiVersion('2019-02-19')
 
 async function createSession(donation: DonationRequest) {
     if (donation.amount == null) throw { status: 400, message: "Please specify an amount" }
