@@ -5,6 +5,10 @@ const {STRIPE_SECRET_KEY, SUCCESS_URL, CANCEL_URL, CURRENCY, STRIPE_MONTHLY_PLAN
 
 const stripe = new Stripe(STRIPE_SECRET_KEY)
 
+const STRIPE_API_VERSION = "2019-02-19"
+
+stripe.setApiVersion(STRIPE_API_VERSION)
+
 const DEFAULT_HEADERS = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, DELETE",
@@ -21,8 +25,6 @@ interface DonationRequest {
     successUrl: string,
     cancelUrl: string
 }
-
-stripe.setApiVersion('2019-02-19; checkout_sessions_beta=v1')
 
 async function createSession(donation: DonationRequest) {
     if (donation.amount == null) throw { status: 400, message: "Please specify an amount" }
@@ -65,7 +67,7 @@ async function createSession(donation: DonationRequest) {
     }
 
     try {
-        return await stripe.checkout.sessions.create(options)
+        return await stripe.checkout.sessions.create(options, { stripe_version: `${STRIPE_API_VERSION}; checkout_sessions_beta=v1` })
     } catch (error) {
         throw { message: `Error from our payments processor: ${error.message}` }
     }
