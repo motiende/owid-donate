@@ -1,7 +1,9 @@
-import { Handler, Context, Callback, APIGatewayEvent } from 'aws-lambda'
+import { URLSearchParams } from 'url'
+import { Handler, Context, APIGatewayEvent } from 'aws-lambda'
+import fetch from 'node-fetch'
 import Stripe from 'stripe'
 
-const {STRIPE_SECRET_KEY, SUCCESS_URL, CANCEL_URL, CURRENCY, STRIPE_MONTHLY_PLAN_ID} = process.env
+const {STRIPE_SECRET_KEY, RECAPTCHA_SECRET_KEY, CURRENCY, STRIPE_MONTHLY_PLAN_ID} = process.env
 
 const stripe = new Stripe(STRIPE_SECRET_KEY)
 
@@ -23,7 +25,8 @@ interface DonationRequest {
     amount: number,
     interval: Interval,
     successUrl: string,
-    cancelUrl: string
+    cancelUrl: string,
+    captchaToken: string
 }
 
 async function createSession(donation: DonationRequest) {
@@ -34,8 +37,8 @@ async function createSession(donation: DonationRequest) {
     const { name, showOnList, interval, successUrl, cancelUrl } = donation;
     const amount = Math.floor(donation.amount)
 
-    if (amount < 50 || amount > 10000000) {
-        throw { status: 400, message: "You can only donate between $0.50 and $100,000 USD" }
+    if (amount < 100 || amount > 10000000) {
+        throw { status: 400, message: "You can only donate between $1 and $100,000 USD" }
     }
 
     const metadata = { name, showOnList }
@@ -73,32 +76,47 @@ async function createSession(donation: DonationRequest) {
     }
 }
 
-const handler: Handler = async (event: APIGatewayEvent, context: Context, callback: Callback) => {
+async function validCaptcha(token: string) {
+    const body = new URLSearchParams({
+        secret: RECAPTCHA_SECRET_KEY,
+        response: token
+    })
+    const response = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+        method: "post",
+        body: body
+    })
+    const json = await response.json()
+    return json.success
+}
+
+const handler: Handler = async (event: APIGatewayEvent, context: Context) => {
     if (event.httpMethod === "POST") {
-        const data: DonationRequest = JSON.parse(event.body)
         try {
+            const data: DonationRequest = JSON.parse(event.body)
+            if (!await validCaptcha(data.captchaToken)) {
+                throw { status: 400, message: "The CAPTCHA challenge failed, please try submitting the form again." }
+            }
             const session = await createSession(data)
-            callback(null, {
+            return {
                 headers: DEFAULT_HEADERS,
                 statusCode: 200,
                 body: JSON.stringify(session)
-            })
-            return
+            }
         } catch (error) {
-            callback(null, {
+            console.error(error)
+            return {
                 headers: DEFAULT_HEADERS,
                 statusCode: +error.status || 500,
-                body: JSON.stringify({ message: error.message })
-            })
-            return
+                body: JSON.stringify({ message: "An unexpected error occurred. " + (error && error.message) })
+            }
         }
     }
 
     // Handle OPTIONS method
-    callback(null, {
+    return {
         headers: DEFAULT_HEADERS,
         statusCode: 200
-    })
+    }
 };
 
 export { handler }

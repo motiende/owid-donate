@@ -21,7 +21,9 @@
     "@slack/client": "^4.8.0",
     "@types/aws-lambda": "^8.10.18",
     "@types/node": "^10.12.19",
+    "@types/node-fetch": "^2.1.6",
     "dotenv": "^6.2.0",
+    "node-fetch": "^2.3.0",
     "stripe": "^6.24.0"
   }
 }
