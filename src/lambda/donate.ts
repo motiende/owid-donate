@@ -1,32 +1,16 @@
 import { URLSearchParams } from 'url'
 import { Handler, Context, APIGatewayEvent } from 'aws-lambda'
 import fetch from 'node-fetch'
-import Stripe from 'stripe'
 
-const {STRIPE_SECRET_KEY, RECAPTCHA_SECRET_KEY, CURRENCY, STRIPE_MONTHLY_PLAN_ID} = process.env
+import { stripe, STRIPE_API_VERSION } from '../shared/stripe'
+import { DonationRequest, StripeMetadata } from '../shared/types'
 
-const stripe = new Stripe(STRIPE_SECRET_KEY)
-
-const STRIPE_API_VERSION = "2019-02-19"
-
-stripe.setApiVersion(STRIPE_API_VERSION)
+const {RECAPTCHA_SECRET_KEY, CURRENCY, STRIPE_MONTHLY_PLAN_ID} = process.env
 
 const DEFAULT_HEADERS = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, DELETE",
     "Access-Control-Allow-Headers": "Content-Type, Access-Control-Allow-Headers, X-Requested-With"
-}
-
-type Interval = "once" | "monthly"
-
-interface DonationRequest {
-    name: string,
-    showOnList: boolean,
-    amount: number,
-    interval: Interval,
-    successUrl: string,
-    cancelUrl: string,
-    captchaToken: string
 }
 
 async function createSession(donation: DonationRequest) {
@@ -41,7 +25,7 @@ async function createSession(donation: DonationRequest) {
         throw { status: 400, message: "You can only donate between $1 and $100,000 USD" }
     }
 
-    const metadata = { name, showOnList }
+    const metadata: StripeMetadata = { name, showOnList }
 
     const options: any = {
         success_url: successUrl,
@@ -70,7 +54,8 @@ async function createSession(donation: DonationRequest) {
     }
 
     try {
-        return await stripe.checkout.sessions.create(options, { stripe_version: `${STRIPE_API_VERSION}; checkout_sessions_beta=v1` })
+        // The types for 'checkout' are not yet there...
+        return await (stripe as any).checkout.sessions.create(options, { stripe_version: `${STRIPE_API_VERSION}; checkout_sessions_beta=v1` })
     } catch (error) {
         throw { message: `Error from our payments processor: ${error.message}` }
     }
