@@ -32,7 +32,11 @@ function hasMetadata(object: any) {
 }
 
 function getMetadata(object: any): StripeMetadata {
-    return object && object.metadata
+    const metadata = (object && object.metadata) || {}
+    return {
+        name: metadata.name,
+        showOnList: metadata.name && (metadata.showOnList === "true" || metadata.showOnList === true)
+    }
 }
 
 const handler: Handler = async (event: APIGatewayEvent, context: Context, callback: Callback) => {
