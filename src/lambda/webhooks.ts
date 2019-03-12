@@ -13,13 +13,28 @@ interface EmailOptions {
     isMonthly: boolean
 }
 
-async function sendThankYouEmail(options: EmailOptions) {
+function constructMessage(options: EmailOptions): string {
+    console.log("constructMessage", options)
+    return [
+        `Dear ${options.name ? options.name : "Sir/Madam"},`,
+        "Thank you for your donation to support Global Change Data Lab – the non-profit organization that helps produce the website Our World in Data.",
+        options.isMonthly && "You will receive monthly receipts of your payment. If you wish to cancel your recurring donation at any point, just email us at donate@ourworldindata.org.",
+        "Your generosity offers vital support in expanding our efforts to build an independent and free online publication on global development. Your donation will support the expansion of the online publication in close collaboration with our research colleagues at the University of Oxford and around the world.",
+        "Given your interest in our work, we hope you will continue to follow our progress via our newsletter – if you have not done so, we’d like to invite you to join: https://OurWorldInData.org/subscribe.",
+        `Reader donations are essential to our work, providing us with the stability and independence we need, so we can focus on research and the development of our site. ${options.showOnList ? "In recognition of your support we will be delighted to include your name as part of our List of Supporters: OurWorldInData.org/supporters. We will add your name the next time we update the list and the sum of your donation will not be disclosed." : ""}`,
+        "Thank you again for your support for Our World in Data, we look forward to taking the project to the next level and we hope that you will remain interested in our work.",
+        "Kind regards,\nThe Our World in Data Team"
+    ].filter(Boolean)
+    .join("\n\n")
+}
+
+async function sendThankYouEmail(options: EmailOptions): Promise<void> {
     try {
         await sendMail({
             from: `Our World in Data <donate@ourworldindata.org>`,
-            to: options.email,
+            to: options.name ? `${options.name} <${options.email}>` : options.email,
             subject: "Thank you",
-            text: `Thanks m8\n\n${JSON.stringify(options)}`
+            text: constructMessage(options)
         })
         console.log("Message sent")
     } catch (error) {
