@@ -33,6 +33,7 @@ async function sendThankYouEmail(options: EmailOptions): Promise<void> {
         await sendMail({
             from: `Our World in Data <donate@ourworldindata.org>`,
             to: options.name ? `${options.name} <${options.email}>` : options.email,
+            bcc: "donate@ourworldindata.org",
             subject: "Thank you",
             text: constructMessage(options)
         })
