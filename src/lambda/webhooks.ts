@@ -14,7 +14,6 @@ interface EmailOptions {
 }
 
 function constructMessage(options: EmailOptions): string {
-    console.log("constructMessage", options)
     return [
         `Dear ${options.name ? options.name : "Sir/Madam"},`,
         "Thank you for your donation to support Global Change Data Lab – the non-profit organization that helps produce the website Our World in Data.",
