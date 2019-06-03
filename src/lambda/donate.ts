@@ -2,7 +2,7 @@ import { URLSearchParams } from 'url'
 import { Handler, Context, APIGatewayEvent } from 'aws-lambda'
 import fetch from 'node-fetch'
 
-import { stripe, STRIPE_API_VERSION } from '../shared/stripe'
+import { stripe } from '../shared/stripe'
 import { DonationRequest, StripeMetadata } from '../shared/types'
 
 const {RECAPTCHA_SECRET_KEY, CURRENCY, STRIPE_MONTHLY_PLAN_ID} = process.env
@@ -55,7 +55,7 @@ async function createSession(donation: DonationRequest) {
 
     try {
         // The types for 'checkout' are not yet there...
-        return await (stripe as any).checkout.sessions.create(options, { stripe_version: `${STRIPE_API_VERSION}; checkout_sessions_beta=v1` })
+        return await (stripe as any).checkout.sessions.create(options)
     } catch (error) {
         throw { message: `Error from our payments processor: ${error.message}` }
     }
